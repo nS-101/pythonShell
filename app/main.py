@@ -6,8 +6,8 @@ def main():
         sys.stdout.write("$ ")
         command = input("")
         #right now, we're treating all inputs as invalid
-        if command:
-            print(f"{command}: command not found")
+        if command == "exit":
+            break
         else:
             print(f"{command}: command not found")
         pass
