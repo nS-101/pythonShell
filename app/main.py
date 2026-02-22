@@ -6,7 +6,7 @@ def main():
     sys.stdout.write("$ ")
     command = input("")
     #right now, we're treating all inputs as invalid
-    if userInput:
+    if command:
         print(f"{command}: command not found")
     else:
         print(f"{command}: command not found")
