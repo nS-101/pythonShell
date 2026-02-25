@@ -1,5 +1,6 @@
 import sys
-
+import os
+import shutil
 
 def main():
     while True:
@@ -17,10 +18,13 @@ def main():
             if commandArrayLength == 2:
                 #array of exit,echo,type, or other commands(currently invalid) then printf with corresponding text
                 typeArr = ["echo", "exit", "type"]
-                if commandArray[1]in typeArr:
-                    print(f"{commandArray[1]} is a shell builtin")
-                else: #right now, the only valid words after type are echo,exit, and type
-                    commandString = " ".join(commandArray[1:])
+                if commandArray[1]in typeArr: #right now, the only valid words after type are echo,exit, and type
+                    print(f"{commandArray[1]} is a shell builtin") #since the input is just two words(two elements), we can use the second word which the user wants the type of as arrayIndex[1]
+                elif(shutil.which(commandArray[1])):
+                    filePath = shutil.which(commandArray[1])
+                    print(f"{commandArray[1]} is " + filePath)
+                else: 
+                    commandString = " ".join(commandArray[1:]) #
                     print(f"{commandString}: not found")
 
             else:
@@ -29,6 +33,7 @@ def main():
         else:
             print(f"{command}: command not found")
         pass
+
 
 
 if __name__ == "__main__":
