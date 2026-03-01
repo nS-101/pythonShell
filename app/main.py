@@ -16,14 +16,21 @@ def commandType(userCommand):
             return(f"{userCommandArr[1]} is {filePath}")
         else:
             return(f"{"".join(userCommandArr[1:])}: not found")
-        
+
+def directorySwitch(userCommand):
+    userCommandArr = userCommand.strip().split()
+    try:
+        os.chdir(userCommandArr[1:])
+    except FileNotFoundError:
+        return(f"cd: {userCommandArr[1:]}: No such file or directory")
+
+
 def main():
     while True:
         sys.stdout.write("$ ")
         command = input("")
         commandArray = command.strip().split() #convert user input into an array of words
         commandArrayLength = len(commandArray)
-        #right now, we're treating all inputs as invalid
         
         if command == "exit":
             break
@@ -38,6 +45,9 @@ def main():
         elif commandArray[0] == "pwd":
             currentPath = os.getcwd()
             print(currentPath)
+        
+        elif commandArray[0] == "cd":
+            directorySwitch(command)
         
         else:
             if(shutil.which(commandArray[0])): #argument 0 since the first word is going to be the command and the other stuff is probably arguments
