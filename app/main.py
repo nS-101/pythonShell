@@ -3,7 +3,7 @@ import os
 import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 
-def commandType(userCommand):
+def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
     userCommandArr = userCommand.strip().split()
     if len(userCommandArr) < 2:
@@ -17,10 +17,17 @@ def commandType(userCommand):
         else:
             return(f"{"".join(userCommandArr[1:])}: not found")
 
-def directorySwitch(userCommand):
+def directorySwitch(userCommand): #cd command
     userCommandArr = userCommand.strip().split()
+    homeSign = "~"
+
+    if len(userCommandArr == 1):
+        path = homeSign
+    else:
+        path = userCommandArr[1]
+
     try:
-        os.chdir("".join(userCommandArr[1:]))
+        os.chdir(os.path.expanduser(path)) #os.chdir works for both relative and absolute paths and expanduser adds functionality for stuff like ~
         return True
     except FileNotFoundError:
         return False
@@ -51,7 +58,7 @@ def main():
             if directorySwitch(command):
                 pass #do nothing if the cd worked
             else:
-                print(f"{"".join(commandArray[1:])}: No such file or directory")
+                print(f"{"".join(commandArray[1:])}: No such file or directory") #cd failed
 
         
         else:
