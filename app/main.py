@@ -9,11 +9,11 @@ def commandType(userCommand):
     if len(userCommandArr) != 2:
         return(f"{userCommand}: not found")
     else:
-        if userCommand[1] in validTypeArr:
+        if userCommandArr[1] in validTypeArr:
             return(f"{userCommandArr[1]} is a shell builtin")
         elif shutil.which(userCommandArr[1]):
             filePath = shutil.which(userCommandArr[1])
-            return(f"{userCommandArr} is {filePath}")
+            return(f"{userCommandArr[1]} is {filePath}")
         else:
             return(f"{userCommand}: not found")
         
