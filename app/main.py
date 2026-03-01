@@ -20,9 +20,9 @@ def commandType(userCommand):
 def directorySwitch(userCommand):
     userCommandArr = userCommand.strip().split()
     try:
-        os.chdir(userCommandArr[1:])
+        os.chdir("".join(userCommandArr[1:]))
     except FileNotFoundError:
-        return(f"cd: {userCommandArr[1:]}: No such file or directory")
+        return(f"cd: {"".join(userCommandArr[1:])}: No such file or directory")
 
 
 def main():
