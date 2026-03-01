@@ -15,7 +15,7 @@ def commandType(userCommand):
             filePath = shutil.which(userCommandArr[1])
             return(f"{userCommandArr[1]} is {filePath}")
         else:
-            return(f"{userCommand[1:]}: not found")
+            return(f"{userCommandArr[1:]}: not found")
         
 def main():
     while True:
