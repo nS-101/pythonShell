@@ -4,9 +4,9 @@ import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 
 def commandType(userCommand):
-    validTypeArr = ["echo","exit","exit","pwd"]
+    validTypeArr = ["echo","exit","pwd","cd","type"]
     userCommandArr = userCommand.strip().split()
-    if len(userCommandArr) != 2:
+    if len(userCommandArr) < 2:
         return(f"{userCommand}: not found")
     else:
         if userCommandArr[1] in validTypeArr:
@@ -33,7 +33,11 @@ def main():
             print(commandString)
         
         elif commandArray[0] == "type":
-            commandType(command)
+            print(commandType(command))
+        
+        elif commandArray[0] == "pwd":
+            currentPath = os.getcwd()
+            print(currentPath)
         
         else:
             if(shutil.which(commandArray[0])): #argument 0 since the first word is going to be the command and the other stuff is probably arguments
