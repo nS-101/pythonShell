@@ -3,6 +3,20 @@ import os
 import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 
+def commandType(userCommand):
+    validTypeArr = ["echo","exit","exit","pwd"]
+    userCommandArr = userCommand.strip().split()
+    if len(userCommandArr) != 2:
+        return(f"{userCommand}: not found")
+    else:
+        if userCommand[1] in validTypeArr:
+            return(f"{userCommandArr[1]} is a shell builtin")
+        elif shutil.which(userCommandArr[1]):
+            filePath = shutil.which(userCommandArr[1])
+            return(f"{userCommandArr} is {filePath}")
+        else:
+            return(f"{userCommand}: not found")
+        
 def main():
     while True:
         sys.stdout.write("$ ")
@@ -19,24 +33,7 @@ def main():
             print(commandString)
         
         elif commandArray[0] == "type":
-            
-            if commandArrayLength == 2:
-                #array of exit,echo,type, or other commands(currently invalid) then printf with corresponding text
-                typeArr = ["echo", "exit", "type"]
-                
-                if commandArray[1]in typeArr: #right now, the only valid words after type are echo,exit, and type
-                    print(f"{commandArray[1]} is a shell builtin") #since the input is just two words(two elements), we can use the second word which the user wants the type of as arrayIndex[1]
-                
-                elif(shutil.which(commandArray[1])):
-                    filePath = shutil.which(commandArray[1])
-                    print(f"{commandArray[1]} is " + filePath)
-                
-                else: 
-                    commandString = " ".join(commandArray[1:]) #
-                    print(f"{commandString}: not found")
-            else:
-                commandString = " ".join(commandArray[1:])
-                print(f"{commandString}: not found")
+            commandType(command)
         
         else:
             if(shutil.which(commandArray[0])): #argument 0 since the first word is going to be the command and the other stuff is probably arguments
