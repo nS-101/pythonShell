@@ -21,8 +21,9 @@ def directorySwitch(userCommand):
     userCommandArr = userCommand.strip().split()
     try:
         os.chdir("".join(userCommandArr[1:]))
+        return True
     except FileNotFoundError:
-        return(f"cd: {"".join(userCommandArr[1:])}: No such file or directory")
+        return False
 
 
 def main():
@@ -47,7 +48,11 @@ def main():
             print(currentPath)
         
         elif commandArray[0] == "cd":
-            directorySwitch(command)
+            if directorySwitch(command):
+                pass #do nothing if the cd worked
+            else:
+                print(f"{"".join(commandArray[1:])}: No such file or directory")
+
         
         else:
             if(shutil.which(commandArray[0])): #argument 0 since the first word is going to be the command and the other stuff is probably arguments
