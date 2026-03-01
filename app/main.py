@@ -21,7 +21,7 @@ def directorySwitch(userCommand): #cd command
     userCommandArr = userCommand.strip().split()
     homeSign = "~"
 
-    if len(userCommandArr == 1):
+    if len(userCommandArr) == 1:
         path = homeSign
     else:
         path = userCommandArr[1]
