@@ -44,7 +44,7 @@ def main():
                 #print(f"{commandArray[1]} is " + filePath)
 
                 if(os.access(filePath, os.F_OK) and os.access(filePath, os.X_OK)): #os.F_OK checks for filepath existence and os.F_OK checks for if it is executable(perms)
-                    subprocess.run(filePath + commandArray[1:])
+                    subprocess.run(commandArray, executable=filePath)
 
 
             else: 
