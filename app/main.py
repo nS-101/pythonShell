@@ -7,7 +7,7 @@ def commandType(userCommand):
     validTypeArr = ["echo","exit","pwd","cd","type"]
     userCommandArr = userCommand.strip().split()
     if len(userCommandArr) < 2:
-        return(f"{userCommand}: not found")
+        return(f"{userCommandArr[1:]}: not found")
     else:
         if userCommandArr[1] in validTypeArr:
             return(f"{userCommandArr[1]} is a shell builtin")
