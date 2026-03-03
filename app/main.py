@@ -19,7 +19,7 @@ def commandType(userCommand): #commands for when user types "type [statement]"
             return(f"{"".join(userCommandArr[1:])}: not found")
 
 def directorySwitch(userCommand): #cd command
-    userCommandArr = userCommand.strip().split()
+    userCommandArr = shlex.split(userCommand.strip())
     homeSign = "~"
 
     if len(userCommandArr) == 1:
@@ -38,7 +38,7 @@ def main():
     while True:
         sys.stdout.write("$ ")
         command = input("")
-        commandArray = command.strip().split() #convert user input into an array of words
+        commandArray = shlex.split(command.strip()) #convert user input into an array of words
         commandArrayLength = len(commandArray)
         
         if command == "exit":
