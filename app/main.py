@@ -1,5 +1,6 @@
 import sys
 import os
+import shlex #shell lexicon library for word and char manipulation
 import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 
@@ -45,7 +46,9 @@ def main():
         
         elif commandArray[0] == "echo":
             commandString = " ".join(commandArray[1:]) #echo back the entire user input minus the echo keyword
-            print(commandString)
+            commandStringShell = shlex.split(command) #using shlex.split instead of the regular .split helps keep the integrity of the quotes
+            commandStringShellOutput = " ".join(commandStringShell[1:])
+            print(commandStringShellOutput)
         
         elif commandArray[0] == "type":
             print(commandType(command))
