@@ -6,7 +6,7 @@ import subprocess #to execute executable files
 
 def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
-    userCommandArr = userCommand.strip().split()
+    userCommandArr = shlex.split(userCommand.strip())
     if len(userCommandArr) < 2:
         return(f"{userCommandArr[1:]}: not found")
     else:
