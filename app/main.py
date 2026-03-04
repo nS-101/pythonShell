@@ -6,7 +6,7 @@ import subprocess #to execute executable files
 
 def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
-    userCommandArr = shlex.split(userCommand.strip())
+    userCommandArr = shlex.split(userCommand.strip()) #shlex.split is better for terminal commands than just .split()
     if len(userCommandArr) < 2:
         return(f"{userCommandArr[1:]}: not found")
     else:
@@ -18,19 +18,15 @@ def commandType(userCommand): #commands for when user types "type [statement]"
         else:
             return(f"{"".join(userCommandArr[1:])}: not found")
 
-def directorySwitch(userCommand): #cd command
-    userCommandArr = shlex.split(userCommand.strip())
-    homeSign = "~"
-
-    if len(userCommandArr) == 1:
-        path = homeSign
-    else:
-        path = userCommandArr[1]
+def directorySwitch(commandArray): # we use the list as a parameter to prevent having to split again
+    path = "~"
+    if len(commandArray) > 1:
+        path = commandArray[1] 
 
     try:
-        os.chdir(os.path.expanduser(path)) #os.chdir works for both relative and absolute paths and expanduser adds functionality for stuff like ~
+        os.chdir(os.path.expanduser(path))
         return True
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError):
         return False
 
 
@@ -44,6 +40,20 @@ def main():
         if command == "exit":
             break
         
+        elif ">" in command: #redirect stdout command
+            cORt, fileN = command.split(">", 1) #split based on the > sign and split into two elements: the command/text and the file name
+            
+            commandOrText = shlex.split(cORt.strip())
+            fileName = fileN.strip()
+
+            try:
+                with open(fileName, "w") as f:
+                    subprocess.run(commandOrText, stdout=f) #run command and store output to file
+            except Exception as e: #in case of error, print the error
+                print(f"Shell error: {e}")
+
+
+
         elif commandArray[0] == "echo":
             commandString = " ".join(commandArray[1:]) #echo back the entire user input minus the echo keyword
             commandStringShell = shlex.split(command) #using shlex.split instead of the regular .split helps keep the integrity of the quotes
