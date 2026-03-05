@@ -56,8 +56,6 @@ def main():
             except Exception as e: #in case of error, print the error
                 print(f"Shell error: {e}")
 
-
-
         elif commandArray[0] == "echo":
             commandString = " ".join(commandArray[1:]) #echo back the entire user input minus the echo keyword
             commandStringShell = shlex.split(command) #using shlex.split instead of the regular .split helps keep the integrity of the quotes
@@ -75,8 +73,8 @@ def main():
             if directorySwitch(command):
                 pass #do nothing if the cd worked
             else:
-                print(f"{"".join(commandArray[1:])}: No such file or directory") #cd failed
-
+                #print(f"{"".join(commandArray[1:])}: No such file or directory") #cd failed
+                main()
         
         else:
             if(shutil.which(commandArray[0])): #argument 0 since the first word is going to be the command and the other stuff is probably arguments
