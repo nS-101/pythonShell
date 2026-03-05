@@ -42,11 +42,10 @@ def main():
         
         elif ">" in command or "1>" in command: #redirect stdout command
             if "1>" in command:
-                cORt, fileN = command.split("1>", 1)
+                cORt, fileN = command.split("1>", 1)#split based on the 1> sign
             else:
-                cORt, fileN = command.split(">", 1) #split based on the > sign and split into two elements: the command/text and the file name
-            
-            
+                cORt, fileN = command.split(">", 1) #split based on the > sign
+                
             commandOrText = shlex.split(cORt.strip())
             fileName = fileN.strip()
 
@@ -54,7 +53,8 @@ def main():
                 with open(fileName, "w") as f:
                     subprocess.run(commandOrText, stdout=f) #run command and store output to file
             except Exception as e: #in case of error, print the error
-                print(f"Shell error: {e}")
+                #print(f"Shell error: {e}")
+                pass
 
         elif commandArray[0] == "echo":
             commandString = " ".join(commandArray[1:]) #echo back the entire user input minus the echo keyword
@@ -73,8 +73,8 @@ def main():
             if directorySwitch(command):
                 pass #do nothing if the cd worked
             else:
-                #print(f"{"".join(commandArray[1:])}: No such file or directory") #cd failed
-                main()
+                print(f"{"".join(commandArray[1:])}: No such file or directory") #cd failed
+                
         
         else:
             if(shutil.which(commandArray[0])): #argument 0 since the first word is going to be the command and the other stuff is probably arguments
