@@ -40,7 +40,7 @@ def main():
         if command == "exit":
             break
         
-        elif ">" or "1>" in command: #redirect stdout command
+        elif ">" in command or "1>" in command: #redirect stdout command
             cORt, fileN = command.split(">", 1) #split based on the > sign and split into two elements: the command/text and the file name
             
             commandOrText = shlex.split(cORt.strip())
