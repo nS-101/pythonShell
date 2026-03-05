@@ -41,7 +41,11 @@ def main():
             break
         
         elif ">" in command or "1>" in command: #redirect stdout command
-            cORt, fileN = command.split(">", 1) #split based on the > sign and split into two elements: the command/text and the file name
+            if "1>" in command:
+                cORt, fileN = command.split("1>", 1)
+            else:
+                cORt, fileN = command.split(">", 1) #split based on the > sign and split into two elements: the command/text and the file name
+            
             
             commandOrText = shlex.split(cORt.strip())
             fileName = fileN.strip()
