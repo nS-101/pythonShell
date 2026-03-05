@@ -70,7 +70,7 @@ def main():
             print(currentPath)
         
         elif commandArray[0] == "cd":
-            if directorySwitch(command):
+            if directorySwitch(commandArray):
                 pass #do nothing if the cd worked
             else:
                 print(f"{"".join(commandArray[1:])}: No such file or directory") #cd failed
