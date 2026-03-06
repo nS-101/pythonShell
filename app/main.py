@@ -41,7 +41,7 @@ def main():
             break
         
         elif " 2>>" in command:
-            cORt, fileN = command.split("2>", 1) #split based on 2> sign
+            cORt, fileN = command.split("2>>", 1) #split based on 2> sign
             
             commandOrText = shlex.split(cORt.strip()) #clean the first element(command)
             fileName = fileN.strip() #clean the second element(file)
