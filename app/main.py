@@ -39,8 +39,21 @@ def main():
         
         if command == "exit":
             break
+        
+        elif " 2>>" in command:
+            cORt, fileN = command.split("2>", 1) #split based on 2> sign
+            
+            commandOrText = shlex.split(cORt.strip()) #clean the first element(command)
+            fileName = fileN.strip() #clean the second element(file)
 
-        elif " >>" in command or " 1>>" in command:
+            try:
+                with open(fileName, "a") as f: # "a" instead of "w" since we're appending because of the double >>
+                    subprocess.run(commandOrText, stdout=sys.stdout, stderr=f) #run commandOrText where the first element is the command and the rest(elements after the first element are the params), stdout goes to the screen, the error gets written to the file
+            except Exception as e:
+                print(f"Error: {e}")
+
+
+        elif " >>" in command or " 1>>" in command: # >> and 1>> are the same, this command appends to a file instead of overwriting it(hence the open command being "a" not "w")
             if " >>" in command:
                 cORt, fileN = command.split(">>", 1)#split based on the >> sign
             else:
