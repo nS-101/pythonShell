@@ -39,6 +39,20 @@ def main():
         
         if command == "exit":
             break
+
+#note: this elif block containing functionality for 2> has to be above the block for > and 1> since if it isn't the ">" will trigger and the wrong block gets executed and we get an error
+        
+        elif " 2>" in command: #redirect erro(redirect stderr)
+            cORt, fileN = command.split("2>", 1) #split based on 2> sign
+            
+            commandOrText = shlex.split(cORt.strip()) #clean the first element(command)
+            fileName = fileN.strip() #clean the second element(file)
+
+            try:
+                with open(fileName, "w") as f:
+                    subprocess.run(commandOrText, stdout=sys.stdout, stderr=f) #run commandOrText where the first element is the command and the rest(elements after the first element are the params), stdout goes to the screen, the error gets written to the file
+            except Exception as e:
+                print(f"Error: {e}")
         
         elif ">" in command or "1>" in command: #redirect stdout command
             if "1>" in command:
@@ -56,17 +70,7 @@ def main():
                 #print(f"Shell error: {e}")
                 pass
         
-        elif " 2>" in command: #redirect erro(redirect stderr)
-            cORt, fileN = command.split("2>", 1) #split based on 2> sign
-            
-            commandOrText = shlex.split(cORt.strip()) #clean the first element(command)
-            fileName = fileN.strip() #clean the second element(file)
 
-            try:
-                with open(fileName, "w") as f:
-                    subprocess.run(commandOrText, stdout=sys.stdout, stderr=f) #run commandOrText where the first element is the command and the rest(elements after the first element are the params), stdout goes to the screen, the error gets written to the file
-            except Exception as e:
-                print(f"Error: {e}")
 
         elif commandArray[0] == "echo":
             commandString = " ".join(commandArray[1:]) #echo back the entire user input minus the echo keyword
