@@ -50,8 +50,8 @@ def main():
                 with open(fileName, "a") as f:
                     subprocess.run(commandOrText, stdout=sys.stdout, stderr=f) #run commandOrText where the first element is the command and the rest(elements after the first element are the params), stdout goes to the screen, the error gets written to the file
             except Exception as e:
-                print(f"Error: {e}")
-            
+                #print(f"Error: {e}")
+                pass
         
 #note: this elif block containing functionality for 2> has to be above the block for > and 1> since if it isn't the ">" will trigger and the wrong block gets executed and we get an error
         
