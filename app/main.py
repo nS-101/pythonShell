@@ -54,66 +54,60 @@ def _list_executables(): #returns sorted listed of executable names found on PAT
 
 _EXECUTABLES = _list_executables()
 
-def _completer(text, state):
-    """
-    readline completer function.
+# module-level cache variables (define near the top where your completer lives)
+_last_matches = []
+_last_prefix = None
 
-    - first word: complete builtins + executables
-    - after `echo` or `cd`: complete filesystem paths (files/directories)
-    - returns the `state`-th candidate or None
-    """
-    # get buffer and current word bounds
+def _completer(text, state):
+    global _last_matches, _last_prefix
+
     buf = readline.get_line_buffer()
     try:
         begidx = readline.get_begidx()
         endidx = readline.get_endidx()
     except Exception:
-        # Fallback if these aren't available: approximate using buffer and text
         begidx = buf.rfind(text)
         endidx = begidx + len(text)
 
-    # Words typed before the current token (use only up to begidx)
     prefix = buf[:begidx]
     try:
         words = shlex.split(prefix)
     except Exception:
-        # fallback to whitespace split if quoting is incomplete
         words = prefix.split()
 
-    # Determine candidates
-    if not words:
-        # completing first word (command name)
-        candidates = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
-    else:
-        first = words[0]
-        if first in ("echo", "cd"):
-            # filename/path completion for the argument being typed
-            # glob on the text fragment to find matching files/dirs, adding a trailing * to match anything starting with the text
-            if text == "":
-                pattern = "*"
-            else:
-                pattern = text + "*"
-            matches = glob.glob(pattern)
-            # append trailing slash for directories to indicate they are directories
-            candidates = [m + ("/" if os.path.isdir(m) else "") for m in matches]
-        else:
-            # don't complete other commands' arguments by default
-            candidates = []
+    # On first call (state==0), compute and cache matches
+    if state == 0:
+        _last_matches = []
+        _last_prefix = text
 
-    # readline asks for the Nth candidate via state
+        if not words:
+            # first-word completion
+            _last_matches = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
+        else:
+            first = words[0]
+            if first in ("echo", "cd"):
+                # filesystem completion for the token being typed
+                pattern = text + "*" if text != "" else "*"
+                matches = glob.glob(pattern)
+                # append slash marker for directories to signal they are directories
+                _last_matches = [m + ("/" if os.path.isdir(m) and not m.endswith("/") else "") for m in matches]
+            else:
+                _last_matches = []
+
+    # Return the state-th match, adding a trailing space if unique and appropriate
     try:
         candidate = _last_matches[state]
     except IndexError:
         return None
-#below code is for adding a space after tab autocomplete on a command
+
+    # If exactly one match and it's not a directory (doesn't end with '/'), append a space
     if len(_last_matches) == 1:
-        if candidate.endswith("/"):#If exactly one match and it's not a directory (doesn't end with '/'), append a space
+        if candidate.endswith("/"):
             return candidate  # keep the slash so further completion is possible
         else:
             return candidate + " "
     else:
         return candidate
-
 
 
 
