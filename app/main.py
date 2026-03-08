@@ -81,8 +81,10 @@ def _completer(text, state):
         _last_prefix = text
 
         if not words:
-            # first-word completion
-            _last_matches = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
+            # first-word completion: combine builtins + executables then dedupe preserving order
+            candidates = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
+            # remove duplicates while preserving order (dict.fromkeys is a simple pattern)
+            _last_matches = list(dict.fromkeys(candidates))
         else:
             first = words[0]
             if first in ("echo", "cd"):
