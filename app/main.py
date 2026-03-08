@@ -4,6 +4,7 @@ import shlex #shell lexicon library for word and char manipulation
 import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 import glob #to see all files in a directory, mainly used for tab completion functionality 
+import readline #mainly for tab completion functionality 
 
 def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
