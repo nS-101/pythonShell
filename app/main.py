@@ -3,6 +3,7 @@ import os
 import shlex #shell lexicon library for word and char manipulation
 import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
+import glob #to see all files in a directory, mainly used for tab completion functionality 
 
 def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
@@ -30,6 +31,94 @@ def directorySwitch(commandArray): # we use the list as a parameter to prevent h
         return False
 
 
+
+# builtins and a cached list of executables for first-word completion
+_BUILTINS = ["echo", "exit", "pwd", "cd", "type"]
+
+def _list_executables():
+    """Return a sorted list of executable names found on PATH."""
+    cmds = set()
+    for p in os.environ.get("PATH", "").split(os.pathsep):
+        if not p:
+            continue
+        try:
+            for name in os.listdir(p):
+                full = os.path.join(p, name)
+                if os.path.isfile(full) and os.access(full, os.X_OK):
+                    cmds.add(name)
+        except Exception:
+            # ignore unreadable PATH entries
+            continue
+    return sorted(cmds)
+
+_EXECUTABLES = _list_executables()
+
+def _completer(text, state):
+    """
+    readline completer function.
+
+    - first word: complete builtins + executables
+    - after `echo` or `cd`: complete filesystem paths (files/directories)
+    - returns the `state`-th candidate or None
+    """
+    # get buffer and current word bounds
+    buf = readline.get_line_buffer()
+    try:
+        begidx = readline.get_begidx()
+        endidx = readline.get_endidx()
+    except Exception:
+        # Fallback if these aren't available: approximate using buffer and text
+        begidx = buf.rfind(text)
+        endidx = begidx + len(text)
+
+    # Words typed before the current token (use only up to begidx)
+    prefix = buf[:begidx]
+    try:
+        words = shlex.split(prefix)
+    except Exception:
+        # fallback to whitespace split if quoting is incomplete
+        words = prefix.split()
+
+    # Determine candidates
+    if not words:
+        # completing first word (command name)
+        candidates = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
+    else:
+        first = words[0]
+        if first in ("echo", "cd"):
+            # filename/path completion for the argument being typed
+            # glob on the text fragment (works for partial paths like ./fi or /usr/bi)
+            if text == "":
+                pattern = "*"
+            else:
+                pattern = text + "*"
+            matches = glob.glob(pattern)
+            # append trailing slash for directories to indicate they are directories
+            candidates = [m + ("/" if os.path.isdir(m) else "") for m in matches]
+        else:
+            # don't complete other commands' arguments by default
+            candidates = []
+
+    # readline asks for the N-th candidate via state
+    try:
+        return candidates[state]
+    except IndexError:
+        return None
+
+# register completer and enable Tab
+readline.set_completer(_completer)
+# handle macOS (libedit) vs GNU readline binding names
+try:
+    readline.parse_and_bind("tab: complete")
+except Exception:
+    try:
+        readline.parse_and_bind("bind ^I rl_complete")
+    except Exception:
+        # if this fails, completion will be unavailable but program still runs
+        pass
+
+
+
 def main():
     while True:
         sys.stdout.write("$ ")
@@ -41,11 +130,11 @@ def main():
             break
         
         elif " 2>>" in command:
-            cORt, fileN = command.split("2>>", 1) #split based on 2> sign
+            cORt, fileN = command.split("2>>", 1) #split based on 2>> sign
             
             commandOrText = shlex.split(cORt.strip()) #clean the first element(command)
             fileName = fileN.strip() #clean the second element(file)
-
+            
             try:
                 with open(fileName, "a") as f: # "a" instead of "w" since we're appending because of the double >>
                     subprocess.run(commandOrText, stdout=sys.stdout, stderr=f) #run commandOrText where the first element is the command and the rest(elements after the first element are the params), stdout goes to the screen, the error gets written to the file
