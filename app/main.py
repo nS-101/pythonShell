@@ -33,11 +33,11 @@ def directorySwitch(commandArray): # we use the list as a parameter to prevent h
 
 
 
-# builtins and a cached list of executables for first-word completion
+# builtins and a cached list of executables for completion
 _BUILTINS = ["echo", "exit", "pwd", "cd", "type"]
 
-def _list_executables():
-    """Return a sorted list of executable names found on PATH."""
+def _list_executables(): #returns sorted listed of executable names found on PATH, used for tab completion functionality
+    
     cmds = set()
     for p in os.environ.get("PATH", "").split(os.pathsep):
         if not p:
@@ -88,7 +88,7 @@ def _completer(text, state):
         first = words[0]
         if first in ("echo", "cd"):
             # filename/path completion for the argument being typed
-            # glob on the text fragment (works for partial paths like ./fi or /usr/bi)
+            # glob on the text fragment to find matching files/dirs, adding a trailing * to match anything starting with the text
             if text == "":
                 pattern = "*"
             else:
@@ -100,11 +100,24 @@ def _completer(text, state):
             # don't complete other commands' arguments by default
             candidates = []
 
-    # readline asks for the N-th candidate via state
+    # readline asks for the Nth candidate via state
     try:
-        return candidates[state]
+        candidate = _last_matches[state]
     except IndexError:
         return None
+#below code is for adding a space after tab autocomplete on a command
+    if len(_last_matches) == 1:
+        if candidate.endswith("/"):#If exactly one match and it's not a directory (doesn't end with '/'), append a space
+            return candidate  # keep the slash so further completion is possible
+        else:
+            return candidate + " "
+    else:
+        return candidate
+
+
+
+
+
 
 # register completer and enable Tab
 readline.set_completer(_completer)
