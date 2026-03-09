@@ -41,35 +41,38 @@ def execute_pipeline(full_command):
     for i, segment in enumerate(segments):
         args = shlex.split(segment)
         is_last = (i == len(segments) - 1)
-        
-        # 1. Check if the command is a builtin
+
+        # 1. Handle Redirection(only if it's the last segment)
+        if is_last and ">" in segment:
+            cmd_part, file_part = segment.split(">", 1)
+            args = shlex.split(cmd_part.strip())
+            filename = file_part.strip()
+            try:
+                with open(filename, "w") as f:
+                    subprocess.run(args, stdin=prev_stdout, stdout=f)
+                return # We are done!
+            except Exception:
+                return
+
+        # 2. Handle Builtins(inside the loop)
         if args[0] in _BUILTINS:
             builtin_output = ""
-            
-            # Logic for each builtin
             if args[0] == "pwd":
                 builtin_output = os.getcwd() + "\n"
             elif args[0] == "echo":
                 builtin_output = " ".join(args[1:]) + "\n"
-            # Add cd, type, etc. as needed
             
             if is_last:
-                # If it's the end of the pipe, just print it
                 sys.stdout.write(builtin_output)
                 sys.stdout.flush()
-                prev_stdout = None
             else:
-                # If NOT last, we need to create a "fake" process that just
-                # echoes this text so the next command can read it.
-                proc = subprocess.Popen(
-                    ["echo", "-n", builtin_output],
-                    stdout=subprocess.PIPE,
-                    text=True
-                )
+                # Create the "bridge" for the next command
+                proc = subprocess.Popen(["echo", "-n", builtin_output], 
+                                        stdout=subprocess.PIPE, text=True)
                 prev_stdout = proc.stdout
                 processes.append(proc)
         
-        # 2. Otherwise, handle it as an external command
+        # 3. Handle External Commands(inside the loop)
         else:
             proc = subprocess.Popen(
                 args,
@@ -80,10 +83,9 @@ def execute_pipeline(full_command):
             prev_stdout = proc.stdout
             processes.append(proc)
 
-    # 3. Cleanup: Wait for all processes to finish
+    # 4. Wait for everyone to finish(outside the loop)
     for p in processes:
         p.wait()
-
 
 # builtins and a cached list of executables for completion
 _BUILTINS = ["echo", "exit", "pwd", "cd", "type"]
