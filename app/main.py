@@ -1,11 +1,11 @@
-import sys
-import os
+import sys #mainly for redirecting input/output to specific locations
+import os #for directory and file manipulation, mainly used for cd command and tab completion functionality
 import shlex #shell lexicon library for word and char manipulation
 import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 import glob #to see all files in a directory, mainly used for tab completion functionality 
 import readline #mainly for tab completion functionality 
-import time
+import time #mainly used here for double tab functionality, to see how much time has passed between the first and second tab
 
 def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
@@ -33,6 +33,57 @@ def directorySwitch(commandArray): # we use the list as a parameter to prevent h
         return False
 
 
+def execute_pipeline(full_command):
+    segments = [s.strip() for s in full_command.split("|")]
+    prev_stdout = None
+    processes = []
+
+    for i, segment in enumerate(segments):
+        args = shlex.split(segment)
+        is_last = (i == len(segments) - 1)
+        
+        # 1. Check if the command is a builtin
+        if args[0] in _BUILTINS:
+            builtin_output = ""
+            
+            # Logic for each builtin
+            if args[0] == "pwd":
+                builtin_output = os.getcwd() + "\n"
+            elif args[0] == "echo":
+                builtin_output = " ".join(args[1:]) + "\n"
+            # Add cd, type, etc. as needed
+            
+            if is_last:
+                # If it's the end of the pipe, just print it
+                sys.stdout.write(builtin_output)
+                sys.stdout.flush()
+                prev_stdout = None
+            else:
+                # If NOT last, we need to create a "fake" process that just
+                # echoes this text so the next command can read it.
+                proc = subprocess.Popen(
+                    ["echo", "-n", builtin_output],
+                    stdout=subprocess.PIPE,
+                    text=True
+                )
+                prev_stdout = proc.stdout
+                processes.append(proc)
+        
+        # 2. Otherwise, handle it as an external command
+        else:
+            proc = subprocess.Popen(
+                args,
+                stdin=prev_stdout,
+                stdout=subprocess.PIPE if not is_last else None,
+                text=True
+            )
+            prev_stdout = proc.stdout
+            processes.append(proc)
+
+    # 3. Cleanup: Wait for all processes to finish
+    for p in processes:
+        p.wait()
+
 
 # builtins and a cached list of executables for completion
 _BUILTINS = ["echo", "exit", "pwd", "cd", "type"]
@@ -56,8 +107,8 @@ def _list_executables(): #returns sorted listed of executable names found on PAT
 _EXECUTABLES = _list_executables()
 
 
-def _longest_common_prefix(strs):
-    """Return the longest common prefix for a list of strings."""
+def _longest_common_prefix(strs): #returns longest common prefix for a list of strings, used for tab completion functionality
+    
     if not strs:
         return ""
     prefix = strs[0]
