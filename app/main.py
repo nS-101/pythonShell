@@ -5,6 +5,7 @@ import shutil #to find executable files and store their file paths
 import subprocess #to execute executable files
 import glob #to see all files in a directory, mainly used for tab completion functionality 
 import readline #mainly for tab completion functionality 
+import time
 
 def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
@@ -58,8 +59,14 @@ _EXECUTABLES = _list_executables()
 _last_matches = []
 _last_prefix = None
 
+# tab state for double-Tab listing behavior
+_TAB_TIMEOUT = 1.0  # seconds to wait between first and second Tab
+_tab_prefix = None
+_tab_count = 0
+_tab_time = 0.0
+
 def _completer(text, state):
-    global _last_matches, _last_prefix
+    global _last_matches, _last_prefix, _tab_prefix, _tab_count, _tab_time
 
     buf = readline.get_line_buffer()
     try:
@@ -83,8 +90,43 @@ def _completer(text, state):
         if not words:
             # first-word completion: combine builtins + executables then dedupe preserving order
             candidates = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
-            # remove duplicates while preserving order (dict.fromkeys is a simple pattern)
-            _last_matches = list(dict.fromkeys(candidates))
+            candidates = list(dict.fromkeys(candidates))  # remove duplicates while preserving order
+
+            # If multiple matches, handle first/second Tab behavior
+            if len(candidates) > 1:
+                now = time.time()
+                # consider this a "second Tab" only if same prefix and within the timeout
+                if _tab_prefix == text and _tab_count == 1 and (now - _tab_time) <= _TAB_TIMEOUT:
+                    # Second tab: print matches, reprint prompt and original buffer
+                    matches_sorted = sorted(candidates)
+                    sys.stdout.write("\n")
+                    sys.stdout.write("  ".join(matches_sorted) + "\n")
+                    # Reprint prompt and the original buffer content
+                    prompt = "$ "
+                    sys.stdout.write(prompt + readline.get_line_buffer())
+                    sys.stdout.flush()
+                    try:
+                        readline.redisplay()
+                    except Exception:
+                        pass
+                    # reset tab-tracking state
+                    _tab_prefix = None
+                    _tab_count = 0
+                    _tab_time = 0.0
+                else:
+                    # First tab: ring bell and record state
+                    sys.stdout.write("\x07")
+                    sys.stdout.flush()
+                    _tab_prefix = text
+                    _tab_count = 1
+                    _tab_time = now
+
+                # cache matches for potential later requests; return None so no completion is inserted
+                _last_matches = candidates
+                return None
+
+            # If exactly one command matches, treat as unique and complete normally
+            _last_matches = candidates
         else:
             first = words[0]
             if first in ("echo", "cd"):
