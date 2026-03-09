@@ -260,11 +260,24 @@ def main():
     while True:
         sys.stdout.write("$ ")
         command = input("")
+        
+        #must add pipeline logic here before shlex.split treats the pipeline like a normal character and messes up the logic
+        if "|" in command:
+            try:
+                execute_pipeline(command)
+            except Exception as e:
+                print(f"Error executing pipeline: {e}")
+                pass
+            continue #skip rest of the code for this loop since we already handled the logic
+
         commandArray = shlex.split(command.strip()) #convert user input into an array of words
         commandArrayLength = len(commandArray)
         
         if command == "exit":
             break
+
+        elif not command.strip(): #if the user types nothing, just ignore it(handles edge case of nothing entered) 
+            pass
         
         elif " 2>>" in command:
             cORt, fileN = command.split("2>>", 1) #split based on 2>> sign
