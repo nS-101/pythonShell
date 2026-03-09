@@ -55,6 +55,20 @@ def _list_executables(): #returns sorted listed of executable names found on PAT
 
 _EXECUTABLES = _list_executables()
 
+
+def _longest_common_prefix(strs):
+    """Return the longest common prefix for a list of strings."""
+    if not strs:
+        return ""
+    prefix = strs[0]
+    for s in strs[1:]:
+        # shorten prefix until s startswith prefix
+        while not s.startswith(prefix):
+            prefix = prefix[:-1]
+            if not prefix:
+                return ""
+    return prefix
+
 # module-level cache variables (define near the top where your completer lives)
 _last_matches = []
 _last_prefix = None
@@ -92,7 +106,27 @@ def _completer(text, state):
             candidates = [c for c in (_BUILTINS + _EXECUTABLES) if c.startswith(text)]
             candidates = list(dict.fromkeys(candidates))  # remove duplicates while preserving order
 
-            # If multiple matches, handle first/second Tab behavior
+            # candidates is a deduped list of matches
+            if candidates:
+                # try to extend to the longest common prefix (LCP)
+                lcp = _longest_common_prefix(candidates)
+                if len(lcp) > len(text):
+                    new_matches = [c for c in candidates if c.startswith(lcp)]
+                    # if LCP narrows to a single match, complete and append space
+                    if len(new_matches) == 1:
+                        candidate = new_matches[0]
+                        if candidate.endswith("/"):
+                            _last_matches = new_matches
+                            return candidate
+                        else:
+                            _last_matches = new_matches
+                            return candidate + " "
+                    else:
+                        # multiple matches still remain after LCP expansion; insert the LCP
+                        _last_matches = new_matches
+                        return lcp
+
+            # If LCP did not extend the current text, fall back to bell/listing behavior
             if len(candidates) > 1:
                 now = time.time()
                 # consider this a "second Tab" only if same prefix and within the timeout
