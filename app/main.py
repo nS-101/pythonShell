@@ -61,6 +61,8 @@ def execute_pipeline(full_command):
                 builtin_output = os.getcwd() + "\n"
             elif args[0] == "echo":
                 builtin_output = " ".join(args[1:]) + "\n"
+            elif args[0] == "type":
+                builtin_output = commandType(segment) + "\n"
             
             if is_last:
                 sys.stdout.write(builtin_output)
