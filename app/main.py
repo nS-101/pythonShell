@@ -58,11 +58,11 @@ def execute_pipeline(full_command):
         if args[0] in _BUILTINS:
             builtin_output = ""
             if args[0] == "pwd":
-                builtin_output = os.getcwd() + "\n"
+                builtin_output = os.getcwd() + "\n" # we add a newline at the end since pwd adds a newline by default
             elif args[0] == "echo":
-                builtin_output = " ".join(args[1:]) + "\n"
+                builtin_output = " ".join(args[1:]) + "\n" # we want to echo back the entire user input minus the echo keyword, we also add a newline at the end since echo adds a newline by default
             elif args[0] == "type":
-                builtin_output = commandType(segment) + "\n"
+                builtin_output = commandType(segment) + "\n" # reuse the commandType function we defined earlier to get the output for the type builtin
             
             if is_last:
                 sys.stdout.write(builtin_output)
