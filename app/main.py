@@ -41,49 +41,48 @@ def execute_pipeline(full_command):
     for i, segment in enumerate(segments):
         args = shlex.split(segment)
         is_last = (i == len(segments) - 1)
+        redirectFile = None
 
         # 1. Handle Redirection(only if it's the last segment)
         if is_last and ">" in segment:
-            cmd_part, file_part = segment.split(">", 1)
-            args = shlex.split(cmd_part.strip())
-            filename = file_part.strip()
-            try:
-                with open(filename, "w") as f:
-                    subprocess.run(args, stdin=prev_stdout, stdout=f)
-                return # We are done!
-            except Exception:
-                return
+            cmdPart, filePart = segment.split(">", 1)
+            segment = cmdPart.strip()          #strip the redirect off so args parsing is clean
+            redirectFile = filePart.strip()    #just remember the filename, don't open it yet
+        args = shlex.split(segment)
 
-        # 2. Handle Builtins(inside the loop)
         if args[0] in _BUILTINS:
-            builtin_output = ""
+            builtinOutput = ""
             if args[0] == "pwd":
-                builtin_output = os.getcwd() + "\n" # we add a newline at the end since pwd adds a newline by default
+                builtinOutput = os.getcwd() + "\n"
             elif args[0] == "echo":
-                builtin_output = " ".join(args[1:]) + "\n" # we want to echo back the entire user input minus the echo keyword, we also add a newline at the end since echo adds a newline by default
+                builtinOutput = " ".join(args[1:]) + "\n"
             elif args[0] == "type":
-                builtin_output = commandType(segment) + "\n" # reuse the commandType function we defined earlier to get the output for the type builtin
-            
-            if is_last:
-                sys.stdout.write(builtin_output)
+                builtinOutput = commandType(segment) + "\n"
+
+            if redirectFile:
+                with open(redirectFile, "w") as f:
+                    f.write(builtinOutput)
+            elif isLast:
+                sys.stdout.write(builtinOutput)
                 sys.stdout.flush()
             else:
-                # Create the "bridge" for the next command
-                proc = subprocess.Popen(["echo", "-n", builtin_output], 
-                                        stdout=subprocess.PIPE, text=True)
-                prev_stdout = proc.stdout
+                proc = subprocess.Popen(["echo", "-n", builtinOutput], stdout=subprocess.PIPE, text=True)
+                prevStdout = proc.stdout
                 processes.append(proc)
-        
-        # 3. Handle External Commands(inside the loop)
+                
         else:
-            proc = subprocess.Popen(
-                args,
-                stdin=prev_stdout,
-                stdout=subprocess.PIPE if not is_last else None,
-                text=True
-            )
-            prev_stdout = proc.stdout
-            processes.append(proc)
+            if redirectFile:
+                with open(redirectFile, "w") as f:
+                    subprocess.run(args, stdin=prevStdout, stdout=f)
+            else:
+                proc = subprocess.Popen(
+                    args,
+                    stdin=prevStdout,
+                    stdout=subprocess.PIPE if not isLast else None,
+                    text=True
+                )
+                prevStdout = proc.stdout
+                processes.append(proc)
 
     # 4. Wait for everyone to finish(outside the loop)
     for p in processes:
