@@ -11,7 +11,7 @@ def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
     userCommandArr = shlex.split(userCommand.strip()) #shlex.split is better for terminal commands than just .split()
     if len(userCommandArr) < 2:
-        return f"{"".join(userCommandArr[1:])}" #do nothing when running a command with no argument(one word), [1:] returns None when there's only one element in the list, but f"".join converts it to an empty string, without "".join, it would return the empty list itself( [] )
+        return f"{"".join(userCommandArr[1:])}" #do nothing when running a command with no argument(one word), [1:] returns []] when there's only one element in the list, but f"".join converts it to an empty string, without "".join, it would return the empty list itself( [] )
     else:
         if userCommandArr[1] in validTypeArr:
             return(f"{userCommandArr[1]} is a shell builtin")
@@ -35,16 +35,16 @@ def directorySwitch(commandArray): # we use the list as a parameter to prevent h
 
 def execute_pipeline(full_command):
     segments = [s.strip() for s in full_command.split("|")]
-    prev_stdout = None
+    prevStdout = None
     processes = []
 
     for i, segment in enumerate(segments):
         args = shlex.split(segment)
-        is_last = (i == len(segments) - 1)
+        isLast = (i == len(segments) - 1)
         redirectFile = None
 
         # 1. Handle Redirection(only if it's the last segment)
-        if is_last and ">" in segment:
+        if isLast and ">" in segment:
             cmdPart, filePart = segment.split(">", 1)
             segment = cmdPart.strip()          #strip the redirect off so args parsing is clean
             redirectFile = filePart.strip()    #just remember the filename, don't open it yet
@@ -58,6 +58,14 @@ def execute_pipeline(full_command):
                 builtinOutput = " ".join(args[1:]) + "\n"
             elif args[0] == "type":
                 builtinOutput = commandType(segment) + "\n"
+            elif args[0] == "cd":
+                if directorySwitch(args) == True:
+                    builtinOutput = ""
+                else:
+                    target = args[1] if len(args) > 1 else "~"
+                    builtinOutput = f"{target}: No such file or directory\n"
+            elif args[0] == "exit":
+                return "EXIT" #ends program because of pipeline clause in main() 
 
             if redirectFile:
                 with open(redirectFile, "w") as f:
@@ -267,7 +275,9 @@ def main():
         #must add pipeline logic here before shlex.split treats the pipeline like a normal character and messes up the logic
         if "|" in command:
             try:
-                execute_pipeline(command)
+                result = execute_pipeline(command)
+                if result == "EXIT":
+                    break
             except Exception as e:
                 print(f"Error executing pipeline: {e}")
                 pass
