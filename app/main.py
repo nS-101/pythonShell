@@ -11,7 +11,7 @@ def commandType(userCommand): #commands for when user types "type [statement]"
     validTypeArr = ["echo","exit","pwd","cd","type"]
     userCommandArr = shlex.split(userCommand.strip()) #shlex.split is better for terminal commands than just .split()
     if len(userCommandArr) < 2:
-        return(f"{userCommandArr[1:]}: not found")
+        return f"{"".join(userCommandArr[1:])}" #do nothing when running a command with no argument(one word), [1:] returns None when there's only one element in the list, but f"".join converts it to an empty string, without "".join, it would return the empty list itself( [] )
     else:
         if userCommandArr[1] in validTypeArr:
             return(f"{userCommandArr[1]} is a shell builtin")
