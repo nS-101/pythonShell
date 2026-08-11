@@ -136,13 +136,13 @@ _last_matches = []
 _last_prefix = None
 
 # tab state for double-Tab listing behavior
-_TAB_TIMEOUT = 1.0  # seconds to wait between first and second Tab
+_TAB_TIMEOUT = 2.0  # seconds to wait between first and second Tab
 _tab_prefix = None
 _tab_count = 0
 _tab_time = 0.0
 
 def _completer(text, state):
-    global _last_matches, _last_prefix, _tab_prefix, _tab_count, _tab_time
+    global _last_matches, _last_prefix, _tab_prefix, _tab_count
 
     buf = readline.get_line_buffer()
     try:
@@ -189,17 +189,14 @@ def _completer(text, state):
                         return lcp
 
             # If LCP did not extend the current text, fall back to bell/listing behavior
+            # If LCP did not extend the current text, fall back to bell/listing behavior
             if len(candidates) > 1:
-                now = time.time()
-                # consider this a "second Tab" only if same prefix and within the timeout
-                if _tab_prefix == text and _tab_count == 1 and (now - _tab_time) <= _TAB_TIMEOUT:
-                    # Second tab: print matches, reprint prompt and original buffer
-                    matches_sorted = sorted(candidates)
+                # consider this a "second Tab" only if it's the same prefix as the last Tab press
+                if _tab_prefix == text and _tab_count == 1:
+                    # Second tab: print matches, then let readline redraw the prompt + buffer itself
+                    matchesSorted = sorted(candidates)
                     sys.stdout.write("\n")
-                    sys.stdout.write("  ".join(matches_sorted) + "\n")
-                    # Reprint prompt and the original buffer content
-                    prompt = "$ "
-                    sys.stdout.write(prompt + readline.get_line_buffer())
+                    sys.stdout.write("  ".join(matchesSorted) + "\n")
                     sys.stdout.flush()
                     try:
                         readline.redisplay()
@@ -208,14 +205,16 @@ def _completer(text, state):
                     # reset tab-tracking state
                     _tab_prefix = None
                     _tab_count = 0
-                    _tab_time = 0.0
                 else:
                     # First tab: ring bell and record state
                     sys.stdout.write("\x07")
                     sys.stdout.flush()
                     _tab_prefix = text
                     _tab_count = 1
-                    _tab_time = now
+
+                # cache matches for potential later requests; return None so no completion is inserted
+                _last_matches = candidates
+                return None
 
                 # cache matches for potential later requests; return None so no completion is inserted
                 _last_matches = candidates
@@ -253,24 +252,17 @@ def _completer(text, state):
 
 
 
-# register completer and enable Tab
 readline.set_completer(_completer)
-# handle macOS (libedit) vs GNU readline binding names
-try:
+isLibedit = "libedit" in (readline.__doc__ or "")
+if isLibedit:
+    readline.parse_and_bind("bind ^I rl_complete")
+else:
     readline.parse_and_bind("tab: complete")
-except Exception:
-    try:
-        readline.parse_and_bind("bind ^I rl_complete")
-    except Exception:
-        # if this fails, completion will be unavailable but program still runs
-        pass
-
 
 
 def main():
     while True:
-        sys.stdout.write("$ ")
-        command = input("")
+        command = input("$ ")
         
         #must add pipeline logic here before shlex.split treats the pipeline like a normal character and messes up the logic
         if "|" in command:
